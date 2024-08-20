@@ -1,6 +1,6 @@
-from page_analyzer.app import hello_world
+from page_analyzer.app import app
 
 
 __all__ = (
-    hello_world
+    app
 )
