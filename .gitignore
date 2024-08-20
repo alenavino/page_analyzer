@@ -1,0 +1,7 @@
+dist/
+.venv/
+.env
+__pycache__
+.coverage
+coverage.xml
+.pytest_cashe/
