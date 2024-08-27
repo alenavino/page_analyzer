@@ -54,7 +54,7 @@
 </div>
 
   <h2 class="mt-5 mb-3">Проверки</h2>
-  <form method="post" action="/urls/1/checks">
+  <form method="post" action="{{ url_for('post_check', id=url['id']) }}">
   <input type="submit" class="btn btn-primary" value="Запустить проверку">
   </form>
   
@@ -70,8 +70,19 @@
       <th>Дата создания</th>
     </tr>
   </thead>
-    <tbody>
-  
+  <tbody>
+    {% if checks %}
+      {% for check in checks %}
+      <tr>
+        <td>{{ check.id if check.id is not none else '' }}</td>
+        <td>{{ check.status_code if check.status_code is not none else '' }}</td>
+        <td>{{ check.h1 if check.h1 is not none else '' }}</td>
+        <td>{{ check.title if check.title is not none else '' }}</td>
+        <td>{{ check.description if check.description is not none else '' }}</td>
+        <td>{{ check.created_at if check.created_at is not none else '' }}</td>
+      </tr>
+      {% endfor %}
+    {% endif %}
   </tbody>
   </table>
 </div>

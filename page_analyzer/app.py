@@ -27,7 +27,11 @@ def index():
 @app.route('/urls')
 def get_urls():
     with conn.cursor(cursor_factory=RealDictCursor) as curs:
-        curs.execute("SELECT * FROM urls ORDER BY id DESC;")
+        curs.execute("SELECT urls.name, urls.id, MAX(url_checks.created_at)\
+                    FROM urls LEFT JOIN url_checks\
+                    ON urls.id = url_checks.url_id\
+                    GROUP BY urls.id\
+                    ORDER BY urls.id DESC;")
         all_urls = curs.fetchall()
     return render_template(
         'pages/urls.html',
@@ -55,9 +59,14 @@ def get_url(id):
     with conn.cursor(cursor_factory=RealDictCursor) as curs:
         curs.execute("SELECT * FROM urls WHERE id=%s;", (id,))
         url = curs.fetchall()[0]
+    with conn.cursor(cursor_factory=RealDictCursor) as curs:
+        curs.execute("SELECT * FROM url_checks WHERE url_id=%s \
+                    ORDER BY id DESC;", (id,))
+        checks = curs.fetchall()
     return render_template(
         'pages/url.html',
         url=url,
+        checks=checks,
         good_messages=good_messages,
         bad_messages=bad_messages
         )
@@ -94,3 +103,15 @@ def urls_post():
             url=data,
             messages=messages,
             )
+
+
+@app.post('/urls/<id>/checks')
+def post_check(id):
+    with conn.cursor() as curs:
+        curs.execute(
+            "INSERT INTO url_checks (url_id, created_at) VALUES (%s, now());",
+            (id, ))
+    conn.commit()
+    response = make_response(redirect(url_for('get_url', id=id)))
+    flash('Страница успешно проверена', 'success')
+    return response
