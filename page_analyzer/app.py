@@ -7,6 +7,7 @@ from psycopg2.extras import RealDictCursor
 import validators
 from urllib.parse import urlparse, urlunparse
 import requests
+from bs4 import BeautifulSoup
 
 
 load_dotenv()
@@ -114,11 +115,18 @@ def post_check(id):
     r = requests.get(url)
     status = r.status_code
     if r.raise_for_status() is None:
+        soup = BeautifulSoup(r.text, 'html.parser')
+        h1 = soup.h1.string if soup.h1 else ''
+        title = soup.title.string
+        for meta in soup.find_all('meta'):
+            if meta.get('name') == 'description':
+                description = meta.get('content')
         with conn.cursor() as curs:
             curs.execute(
-                "INSERT INTO url_checks (url_id, created_at, status_code)\
-                VALUES (%s, now(), %s) RETURNING created_at;",
-                (id, status, ))
+                "INSERT INTO url_checks\
+                (url_id, created_at, status_code, h1, title, description)\
+                VALUES (%s, now(), %s, %s, %s, %s) RETURNING created_at;",
+                (id, status, h1, title, description, ))
             created_at = curs.fetchone()[0]
         conn.commit()
         with conn.cursor() as curs:
