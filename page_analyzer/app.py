@@ -52,7 +52,7 @@ def normalize_url(url):
     return urlunparse((parsed_url.scheme, parsed_url.hostname, '', '', '', ''))
 
 
-@app.route('/urls/<id>')
+@app.route('/urls/<int:id>')
 def get_url(id):
     good_messages = get_flashed_messages(
         with_categories=True, category_filter='success')
@@ -106,7 +106,7 @@ def urls_post():
             )
 
 
-@app.post('/urls/<id>/checks')
+@app.post('/urls/<int:id>/checks')
 def post_check(id):
     with conn.cursor() as curs:
         curs.execute(
@@ -117,7 +117,7 @@ def post_check(id):
     if r.raise_for_status() is None:
         soup = BeautifulSoup(r.text, 'html.parser')
         h1 = soup.h1.string if soup.h1 else ''
-        title = soup.title.string
+        title = soup.title.string if soup.title else ''
         for meta in soup.find_all('meta'):
             if meta.get('name') == 'description':
                 description = meta.get('content')
