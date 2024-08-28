@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS last_url_checks;
 CREATE TABLE urls (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) UNIQUE NOT NULL,
-    created_at DATE NOT NULL now()
+    created_at DATE NOT NULL
 );
 
 CREATE TABLE url_checks (
@@ -17,7 +17,7 @@ CREATE TABLE url_checks (
     h1 VARCHAR(512),
     title VARCHAR(512),
     description VARCHAR(512),
-    created_at DATE NOT NULL NOW(),
+    created_at DATE NOT NULL
 );
 
 CREATE TABLE last_url_checks (
@@ -27,5 +27,5 @@ CREATE TABLE last_url_checks (
     h1 VARCHAR(512),
     title VARCHAR(512),
     description VARCHAR(512),
-    created_at DATE NOT NULL NOW(),
+    created_at DATE NOT NULL
 );
