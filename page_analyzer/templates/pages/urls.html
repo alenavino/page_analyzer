@@ -53,7 +53,9 @@
           </td>
           
           
-          <td></td>
+          <td>
+            {{ url['status_code'] if url['status_code'] is not none else '' }}
+          </td>
           
         </tr>
         {% endfor %}

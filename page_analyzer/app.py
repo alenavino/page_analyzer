@@ -6,6 +6,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import validators
 from urllib.parse import urlparse, urlunparse
+import requests
 
 
 load_dotenv()
@@ -27,10 +28,10 @@ def index():
 @app.route('/urls')
 def get_urls():
     with conn.cursor(cursor_factory=RealDictCursor) as curs:
-        curs.execute("SELECT urls.name, urls.id, MAX(url_checks.created_at)\
-                    FROM urls LEFT JOIN url_checks\
-                    ON urls.id = url_checks.url_id\
-                    GROUP BY urls.id\
+        curs.execute("SELECT urls.name, urls.id, last_url_checks.created_at,\
+                    last_url_checks.status_code FROM urls\
+                    LEFT JOIN last_url_checks\
+                    ON urls.id = last_url_checks.url_id\
                     ORDER BY urls.id DESC;")
         all_urls = curs.fetchall()
     return render_template(
@@ -83,7 +84,6 @@ def urls_post():
             res = curs.fetchone()
         id_url = res[0] if res else None
         if id_url is not None:
-            print(id_url)
             flash('Страница уже существует', 'info')
             return redirect(url_for('get_url', id=id_url))
         with conn.cursor() as curs:
@@ -109,9 +109,41 @@ def urls_post():
 def post_check(id):
     with conn.cursor() as curs:
         curs.execute(
-            "INSERT INTO url_checks (url_id, created_at) VALUES (%s, now());",
-            (id, ))
-    conn.commit()
-    response = make_response(redirect(url_for('get_url', id=id)))
-    flash('Страница успешно проверена', 'success')
-    return response
+            "SELECT name FROM urls WHERE id=%s;", (id, ))
+        url = curs.fetchone()[0]
+    r = requests.get(url)
+    status = r.status_code
+    if r.raise_for_status() is None:
+        with conn.cursor() as curs:
+            curs.execute(
+                "INSERT INTO url_checks (url_id, created_at, status_code)\
+                VALUES (%s, now(), %s) RETURNING created_at;",
+                (id, status, ))
+            created_at = curs.fetchone()[0]
+        conn.commit()
+        with conn.cursor() as curs:
+            curs.execute(
+                "SELECT id FROM last_url_checks WHERE url_id=%s;", (id, ))
+            res = curs.fetchone()
+        check = res[0] if res else None
+        if check is not None:
+            with conn.cursor() as curs:
+                curs.execute(
+                    "UPDATE last_url_checks\
+                    SET created_at=%s, status_code=%s\
+                    WHERE url_id=%s;", (created_at, status, id, ))
+            conn.commit()
+        else:
+            with conn.cursor() as curs:
+                curs.execute(
+                    "INSERT INTO last_url_checks\
+                    (url_id, created_at, status_code)\
+                    VALUES (%s, %s, %s);", (id, created_at, status))
+            conn.commit()
+        response = make_response(redirect(url_for('get_url', id=id)))
+        flash('Страница успешно проверена', 'success')
+        return response
+    else:
+        response = make_response(redirect(url_for('get_url', id=id)))
+        flash('Произошла ошибка при проверке', 'error')
+        return response
