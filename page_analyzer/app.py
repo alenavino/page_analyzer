@@ -94,10 +94,7 @@ def post_check(id):
         status = get_status_code(url)
         if get_raise_for_status(url) is None:
             parsed_url = parser_url(url)
-            h1 = parsed_url['h1']
-            title = parsed_url['title']
-            description = parsed_url['description']
-            created_at = add_new_check_db(id, status, h1, title, description)
+            created_at = add_new_check_db(id, status, parsed_url)
             check = get_last_check_db(id)
             if check is not None:
                 update_last_check_db(id, created_at, status)

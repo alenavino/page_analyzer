@@ -79,14 +79,14 @@ def get_name_url_db(id):
     return url
 
 
-def add_new_check_db(id, status, h1, title, description):
+def add_new_check_db(id, status, parsed_url):
     conn = connect_db()
     with conn.cursor() as curs:
         curs.execute(
             "INSERT INTO url_checks\
             (url_id, created_at, status_code, h1, title, description)\
             VALUES (%s, now(), %s, %s, %s, %s) RETURNING created_at;",
-            (id, status, h1, title, description, ))
+            (id, status, parsed_url['h1'], parsed_url['title'], parsed_url['description'], ))
         created_at = curs.fetchone()[0]
     conn.commit()
     conn.close()
