@@ -12,7 +12,6 @@ from page_analyzer.parser import (
 
 
 load_dotenv()
-DATABASE_URL = os.getenv('DATABASE_URL')
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
@@ -107,3 +106,7 @@ def post_check(id):
         response = make_response(redirect(url_for('get_url', id=id)))
         flash('Произошла ошибка при проверке', 'error')
         return response
+
+
+if __name__ == '__main__':
+    app.run()
