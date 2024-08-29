@@ -5,8 +5,7 @@ import os
 from page_analyzer.utils import validate_url, normalize_url
 from page_analyzer.db import (
     get_urls_db, get_url_db, get_url_checks_db, get_id_url_db, add_new_url_db,
-    get_name_url_db, add_new_check_db, get_last_check_db, update_last_check_db,
-    add_last_check_db)
+    get_name_url_db, add_new_check_db, last_check_db)
 from page_analyzer.parser import (
     get_status_code, get_raise_for_status, parser_url)
 
@@ -95,11 +94,7 @@ def post_check(id):
         if get_raise_for_status(url) is None:
             parsed_url = parser_url(url)
             created_at = add_new_check_db(id, status, parsed_url)
-            check = get_last_check_db(id)
-            if check is not None:
-                update_last_check_db(id, created_at, status)
-            else:
-                add_last_check_db(id, created_at, status)
+            last_check_db(id, created_at, status)
             response = make_response(redirect(url_for('get_url', id=id)))
             flash('Страница успешно проверена', 'success')
             return response

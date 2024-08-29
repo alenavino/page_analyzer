@@ -124,3 +124,11 @@ def add_last_check_db(id, created_at, status):
             VALUES (%s, %s, %s);", (id, created_at, status))
     conn.commit()
     conn.close()
+
+
+def last_check_db(id, created_at, status):
+    check = get_last_check_db(id)
+    if check is not None:
+        update_last_check_db(id, created_at, status)
+    else:
+        add_last_check_db(id, created_at, status)
