@@ -26,6 +26,11 @@ def index():
     )
 
 
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('error.html'), 404
+
+
 @app.route('/urls')
 def get_urls():
     with conn.cursor(cursor_factory=RealDictCursor) as curs:
