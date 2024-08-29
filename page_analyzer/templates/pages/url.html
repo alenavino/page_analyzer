@@ -4,8 +4,11 @@
   {% for category, message in good_messages %}
     <div class="alert alert-success" role="alert">{{ message }}</div>
   {% endfor %}
-  {% for category, message in bad_messages %}
+  {% for category, message in info_messages %}
     <div class="alert alert-info" role="alert">{{ message }}</div>
+  {% endfor %}
+  {% for category, message in bad_messages %}
+    <div class="alert alert-danger" role="alert">{{ message }}</div>
   {% endfor %}
   <main class="flex-grow-1">
     <div class="container-lg mt-3">

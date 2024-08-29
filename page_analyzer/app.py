@@ -43,8 +43,10 @@ def get_urls():
 def get_url(id):
     good_messages = get_flashed_messages(
         with_categories=True, category_filter='success')
-    bad_messages = get_flashed_messages(
+    info_messages = get_flashed_messages(
         with_categories=True, category_filter='info')
+    bad_messages = get_flashed_messages(
+        with_categories=True, category_filter='error')
     url = get_url_db(id)
     if url is None:
         return page_not_found()
@@ -54,6 +56,7 @@ def get_url(id):
         url=url,
         checks=checks,
         good_messages=good_messages,
+        info_messages=info_messages,
         bad_messages=bad_messages
         )
 
@@ -78,7 +81,7 @@ def urls_post():
             'pages/index.html',
             url=data,
             messages=messages,
-            )
+            ), 422
 
 
 @app.post('/urls/<int:id>/checks')
@@ -87,22 +90,27 @@ def post_check(id):
     if url is None:
         return page_not_found()
     url = get_name_url_db(id)
-    status = get_status_code(url)
-    if get_raise_for_status(url) is None:
-        parsed_url = parser_url(url)
-        h1 = parsed_url['h1']
-        title = parsed_url['title']
-        description = parsed_url['description']
-        created_at = add_new_check_db(id, status, h1, title, description)
-        check = get_last_check_db(id)
-        if check is not None:
-            update_last_check_db(id, created_at, status)
+    try:
+        status = get_status_code(url)
+        if get_raise_for_status(url) is None:
+            parsed_url = parser_url(url)
+            h1 = parsed_url['h1']
+            title = parsed_url['title']
+            description = parsed_url['description']
+            created_at = add_new_check_db(id, status, h1, title, description)
+            check = get_last_check_db(id)
+            if check is not None:
+                update_last_check_db(id, created_at, status)
+            else:
+                add_last_check_db(id, created_at, status)
+            response = make_response(redirect(url_for('get_url', id=id)))
+            flash('Страница успешно проверена', 'success')
+            return response
         else:
-            add_last_check_db(id, created_at, status)
-        response = make_response(redirect(url_for('get_url', id=id)))
-        flash('Страница успешно проверена', 'success')
-        return response
-    else:
+            response = make_response(redirect(url_for('get_url', id=id)))
+            flash('Произошла ошибка при проверке', 'error')
+            return response
+    except Exception:
         response = make_response(redirect(url_for('get_url', id=id)))
         flash('Произошла ошибка при проверке', 'error')
         return response
