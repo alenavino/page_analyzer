@@ -58,7 +58,7 @@ def get_url(id):
         good_messages=good_messages,
         info_messages=info_messages,
         bad_messages=bad_messages
-        )
+    )
 
 
 @app.post('/urls')
@@ -81,7 +81,7 @@ def urls_post():
             'pages/index.html',
             url=data,
             messages=messages,
-            ), 422
+        ), 422
 
 
 @app.post('/urls/<int:id>/checks')
